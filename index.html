@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>To-Do List</title>
+  <title>To-Do List com Persistência</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -66,7 +66,7 @@
       align-items: center;
     }
 
-    li.completed {
+    li.completed span {
       text-decoration: line-through;
       color: gray;
     }
@@ -80,36 +80,61 @@
 <body>
 
   <div class="todo-container">
-    <h1>Minhas Tarefas</h1>
+    <h1>Minha To-Do List</h1>
     <input type="text" id="taskInput" placeholder="Digite uma tarefa..." />
     <button onclick="addTask()">Adicionar</button>
     <ul id="taskList"></ul>
   </div>
 
   <script>
-    function addTask() {
-      const taskInput = document.getElementById("taskInput");
-      const taskText = taskInput.value.trim();
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
 
+    // Carrega as tarefas salvas ao iniciar
+    window.onload = () => {
+      const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      savedTasks.forEach(task => createTaskElement(task.text, task.completed));
+    };
+
+    function addTask() {
+      const taskText = taskInput.value.trim();
       if (taskText === "") return;
 
+      createTaskElement(taskText, false);
+      taskInput.value = "";
+      saveTasks();
+    }
+
+    function createTaskElement(text, completed) {
       const li = document.createElement("li");
+      if (completed) li.classList.add("completed");
 
       li.innerHTML = `
-        <span onclick="toggleComplete(this)">${taskText}</span>
+        <span onclick="toggleComplete(this)">${text}</span>
         <span class="delete" onclick="deleteTask(this)">🗑️</span>
       `;
-
-      document.getElementById("taskList").appendChild(li);
-      taskInput.value = "";
+      taskList.appendChild(li);
     }
 
     function toggleComplete(span) {
       span.parentElement.classList.toggle("completed");
+      saveTasks();
     }
 
     function deleteTask(span) {
       span.parentElement.remove();
+      saveTasks();
+    }
+
+    function saveTasks() {
+      const tasks = [];
+      document.querySelectorAll("#taskList li").forEach(li => {
+        tasks.push({
+          text: li.querySelector("span").innerText,
+          completed: li.classList.contains("completed")
+        });
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
     }
   </script>
 
